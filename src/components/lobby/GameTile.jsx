@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import AudioEngine from '../../services/AudioEngine'
 
+const PLAYABLE_GAME_ID = 'magic_wheel_7s'
+
 const GLOW_COLORS = [
   'shadow-[0_0_24px_rgba(245,197,66,0.22)]',
   'shadow-[0_0_24px_rgba(120,200,80,0.2)]',
@@ -19,21 +21,29 @@ export default function GameTile({
 }) {
   const navigate = useNavigate()
   const glow = GLOW_COLORS[index % GLOW_COLORS.length]
+  const isPlayable = id === PLAYABLE_GAME_ID
+
+  function openGame() {
+    if (!isPlayable) return
+    AudioEngine.unlock()
+    AudioEngine.playSFX('click')
+    navigate(`/game/${id}`)
+  }
 
   return (
     <button
       type="button"
-      onClick={() => {
-        AudioEngine.unlock()
-        AudioEngine.playSFX('click')
-        navigate(`/game/${id}`)
-      }}
-      onMouseEnter={() => AudioEngine.playSFX('hover')}
-      className={`group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#caa13e]/30 bg-gradient-to-b from-[#2e2410] to-[#1c1409] text-left shadow-lg transition-transform duration-200 active:scale-[0.97] ${glow}`}
+      onClick={openGame}
+      onMouseEnter={() => isPlayable && AudioEngine.playSFX('hover')}
+      disabled={!isPlayable}
+      aria-disabled={!isPlayable}
+      aria-label={isPlayable ? title : `${title} — coming soon`}
+      className={`group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#caa13e]/30 bg-gradient-to-b from-[#2e2410] to-[#1c1409] text-left shadow-lg transition-transform duration-200 ${
+        isPlayable ? 'active:scale-[0.97]' : 'cursor-not-allowed'
+      } ${glow}`}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(245,197,66,0.16),transparent_65%)]" />
 
-      {/* Sweeping light reflection on hover */}
       <span className="tile-shimmer" aria-hidden="true" />
 
       <div className="relative flex h-full flex-col items-center justify-center px-3 pb-10 pt-4">
@@ -46,13 +56,13 @@ export default function GameTile({
       </div>
 
       {badge === 'hot' && (
-        <span className="badge-pulse absolute right-2 top-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_12px_rgba(239,68,68,0.55)]">
+        <span className="badge-pulse absolute right-2 top-2 z-[2] rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_12px_rgba(239,68,68,0.55)]">
           HOT
         </span>
       )}
 
       {badge === 'new' && (
-        <span className="badge-pulse absolute right-2 top-2 rounded-full bg-gradient-to-r from-green-cta to-emerald-400 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-[#0D0D1A] shadow-[0_0_12px_rgba(39,174,96,0.45)]">
+        <span className="badge-pulse absolute right-2 top-2 z-[2] rounded-full bg-gradient-to-r from-green-cta to-emerald-400 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-[#0D0D1A] shadow-[0_0_12px_rgba(39,174,96,0.45)]">
           NEW
         </span>
       )}
@@ -62,6 +72,19 @@ export default function GameTile({
           {title}
         </p>
       </div>
+
+      {!isPlayable && (
+        <div
+          className="coming-soon-tile-overlay absolute inset-0 z-[3] flex items-center justify-center p-3"
+          aria-hidden="true"
+        >
+          <div className="coming-soon-glass coming-soon-glass--tile flex w-full items-center justify-center rounded-xl px-3 py-4">
+            <p className="font-oswald text-sm font-bold uppercase tracking-[0.18em] text-white">
+              Coming Soon
+            </p>
+          </div>
+        </div>
+      )}
     </button>
   )
 }

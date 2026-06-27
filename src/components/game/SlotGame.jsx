@@ -7,9 +7,9 @@ import { useGameStore } from '../../store/gameStore'
 
 const GAME_WIDTH = 1920
 const GAME_HEIGHT = 1080
-const PARENT_ID = 'phaser-container'
 
 export default function SlotGame() {
+  const shellRef = useRef(null)
   const containerRef = useRef(null)
   const gameRef = useRef(null)
   const [bigWinAmount, setBigWinAmount] = useState(null)
@@ -40,8 +40,9 @@ export default function SlotGame() {
 
   useLayoutEffect(() => {
     const parent = containerRef.current
-    if (!parent) {
-      console.error('[SlotGame] Missing parent element:', PARENT_ID)
+    const shell = shellRef.current
+    if (!parent || !shell) {
+      console.error('[SlotGame] Missing game shell or container')
       setBootError('Game container not found')
       return undefined
     }
@@ -50,10 +51,24 @@ export default function SlotGame() {
       return undefined
     }
 
+    const syncScale = () => {
+      const game = gameRef.current
+      if (!game || !shell) return
+
+      const width = shell.clientWidth
+      const height = shell.clientHeight
+      if (width > 0 && height > 0) {
+        game.scale.setParentSize(width, height)
+        game.scale.refresh()
+      }
+    }
+
     try {
       const config = {
         type: Phaser.WEBGL,
-        parent: PARENT_ID,
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
+        parent,
         backgroundColor: '#0a0a0e',
         antialias: true,
         roundPixels: true,
@@ -71,33 +86,42 @@ export default function SlotGame() {
 
       const canvas = game.canvas
       canvas.style.display = 'block'
-      canvas.style.width = '100%'
-      canvas.style.height = '100%'
+      canvas.style.maxWidth = '100%'
+      canvas.style.maxHeight = '100%'
+
+      const resizeObserver = new ResizeObserver(() => {
+        syncScale()
+      })
+      resizeObserver.observe(shell)
+
+      requestAnimationFrame(() => {
+        syncScale()
+        requestAnimationFrame(syncScale)
+      })
 
       setBootError(null)
+
+      return () => {
+        resizeObserver.disconnect()
+        if (gameRef.current) {
+          gameRef.current.destroy(true)
+          gameRef.current = null
+        }
+        parent.innerHTML = ''
+        useGameStore.getState().setSpinning(false)
+      }
     } catch (error) {
       console.error('[SlotGame] Phaser boot failed:', error)
       setBootError(error instanceof Error ? error.message : 'Phaser failed to start')
-    }
-
-    return () => {
-      if (gameRef.current) {
-        gameRef.current.destroy(true)
-        gameRef.current = null
-      }
-
-      parent.innerHTML = ''
-      useGameStore.getState().setSpinning(false)
+      return undefined
     }
   }, [])
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#0a0a0e]">
-      <div
-        ref={containerRef}
-        id={PARENT_ID}
-        className="h-full w-full overflow-hidden"
-      />
+    <div className="slot-game-shell">
+      <div ref={shellRef} className="slot-scale-frame">
+        <div ref={containerRef} className="phaser-slot-host" />
+      </div>
 
       {bootError && (
         <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-[#0a0a0e]/90 p-6 text-center">

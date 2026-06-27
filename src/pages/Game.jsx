@@ -1,22 +1,21 @@
-import { useParams } from 'react-router-dom'
+import { createPortal } from 'react-dom'
+import { useParams, Navigate } from 'react-router-dom'
 import SlotGame from '../components/game/SlotGame'
+
+const PLAYABLE_GAME_ID = 'magic_wheel_7s'
 
 export default function Game() {
   const { gameId } = useParams()
 
-  if (gameId !== 'magic_wheel_7s') {
-    return (
-      <div className="game-viewport flex items-center justify-center p-6">
-        <p className="text-center font-roboto text-text-secondary">
-          Game &quot;{gameId}&quot; is not available yet.
-        </p>
-      </div>
-    )
+  if (gameId !== PLAYABLE_GAME_ID) {
+    return <Navigate to="/lobby" replace />
   }
 
-  return (
+  // Portal to body so the game escapes #root max-width / overflow clipping.
+  return createPortal(
     <div className="game-viewport">
       <SlotGame />
-    </div>
+    </div>,
+    document.body,
   )
 }
