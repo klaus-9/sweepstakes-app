@@ -1,0 +1,115 @@
+.login-page {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background-color: #1a1206;
+  background-image:
+    linear-gradient(rgba(12, 9, 4, 0.55), rgba(12, 9, 4, 0.72)),
+    url('/assets/jungle/background.png');
+  background-size: cover, cover;
+  background-position: center, center;
+}
+
+/* Drifting gold embers — quiet motion instead of the old card/chip/dice clutter */
+.login-embers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.login-ember {
+  position: absolute;
+  bottom: -10%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-shine), var(--gold-primary) 60%, transparent 70%);
+  opacity: 0;
+  animation: login-ember-rise linear infinite;
+}
+
+.login-ember:nth-child(1)  { left: 12%; width: 3px;  height: 3px;  animation-duration: 17s; animation-delay: 0s; }
+.login-ember:nth-child(2)  { left: 26%; width: 5px;  height: 5px;  animation-duration: 22s; animation-delay: -6s; }
+.login-ember:nth-child(3)  { left: 41%; width: 2px;  height: 2px;  animation-duration: 19s; animation-delay: -11s; }
+.login-ember:nth-child(4)  { left: 58%; width: 4px;  height: 4px;  animation-duration: 24s; animation-delay: -3s; }
+.login-ember:nth-child(5)  { left: 72%; width: 3px;  height: 3px;  animation-duration: 20s; animation-delay: -14s; }
+.login-ember:nth-child(6)  { left: 86%; width: 5px;  height: 5px;  animation-duration: 26s; animation-delay: -8s; }
+.login-ember:nth-child(7)  { left: 50%; width: 2px;  height: 2px;  animation-duration: 18s; animation-delay: -16s; }
+.login-ember:nth-child(8)  { left: 33%; width: 4px;  height: 4px;  animation-duration: 23s; animation-delay: -19s; }
+
+@keyframes login-ember-rise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  12%  { opacity: 0.55; }
+  88%  { opacity: 0.4; }
+  100% { transform: translateY(-115dvh) translateX(14px); opacity: 0; }
+}
+
+/* Soft gold spotlight behind the brand lockup */
+.login-hero-glow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(212, 175, 55, 0.18) 0%,
+    rgba(138, 109, 31, 0.06) 45%,
+    transparent 72%
+  );
+}
+
+/* Gold medallion — crafted placeholder for the AI-generated emblem */
+.login-emblem {
+  position: relative;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 30%, #fbe9a6 0%, #e7c44e 22%, #d4af37 45%, #9c7a1e 78%, #6e520f 100%);
+  box-shadow:
+    inset 0 2px 5px rgba(255, 255, 255, 0.55),
+    inset 0 -6px 12px rgba(74, 53, 8, 0.65),
+    0 0 0 4px rgba(212, 175, 55, 0.18),
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(212, 175, 55, 0.25);
+}
+
+.login-emblem::before {
+  content: '';
+  position: absolute;
+  inset: 11%;
+  border-radius: 50%;
+  border: 2px dashed rgba(74, 53, 8, 0.45);
+}
+
+.login-emblem__mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 900;
+  font-size: 2rem;
+  letter-spacing: -1px;
+  color: #5c4410;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.login-emblem__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(125deg, transparent 35%, rgba(255, 255, 255, 0.5) 48%, transparent 60%);
+  mix-blend-mode: screen;
+  animation: emblem-sheen 4.5s ease-in-out infinite;
+}
+
+@keyframes emblem-sheen {
+  0%, 100% { opacity: 0; transform: translateX(-30%); }
+  50%      { opacity: 0.9; transform: translateX(30%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-ember,
+  .login-emblem__sheen {
+    animation: none;
+  }
+}
