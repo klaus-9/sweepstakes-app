@@ -125,14 +125,14 @@ export default function SlotGame() {
 
       {bootError && (
         <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-[#0a0a0e]/90 p-6 text-center">
-          <p className="font-roboto text-sm text-red-400">{bootError}</p>
+          <p className="font-body text-sm text-danger">{bootError}</p>
         </div>
       )}
 
       {bigWinAmount !== null && (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
           <p
-            className="big-win-burst font-oswald text-7xl font-black tracking-wide text-gold-shine"
+            className="big-win-burst font-display text-7xl font-bold tracking-wide text-gold"
             style={{ filter: 'drop-shadow(0 0 20px #FFD700)' }}
           >
             +{bigWinAmount.toFixed(2)}

@@ -1,19 +1,11 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
+import Chip from '../ui/Chip'
 import LobbyMenuSheet from './LobbyMenuSheet'
+import Leaderboard from './Leaderboard'
+import ChangePassword from './ChangePassword'
 import { useAuthStore } from '../../store/authStore'
 import { useGameStore } from '../../store/gameStore'
-
-function CoinIcon() {
-  return (
-    <span
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FFD700] to-[#F5A623] text-[10px] font-bold text-[#0D0D1A]"
-      aria-hidden="true"
-    >
-      $
-    </span>
-  )
-}
 
 function getInitials(username = '') {
   return username.slice(0, 2).toUpperCase() || 'PL'
@@ -26,32 +18,10 @@ function formatPlayerId(id) {
 
 function MenuIcon() {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M3 5.5H17"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3 10H17"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3 14.5H17"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3 5.5H17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M3 10H17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M3 14.5H17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   )
 }
@@ -64,6 +34,7 @@ export default function TopBar() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [cashbackOpen, setCashbackOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
+  const [changePwOpen, setChangePwOpen] = useState(false)
 
   const cashbackBalance = 0
 
@@ -74,26 +45,40 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between gap-2 border-b border-[#caa13e]/25 bg-[#150f06]/80 px-4 backdrop-blur-md">
-        <div className="flex min-w-0 shrink-0 items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f5c542] to-[#3a8a3a] font-roboto text-[11px] font-bold text-[#1a1206] shadow-[0_0_12px_rgba(120,200,80,0.35)]"
-            aria-hidden="true"
+      <header
+        className="material sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between gap-2 border-b border-hair px-3"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        {/* Identity → opens Profile & Account panel */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="flex min-h-[44px] min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-surface-2"
+          aria-label="Open profile and account"
+        >
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent font-display text-[12px] font-semibold text-white"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.25)' }}
           >
             {getInitials(player?.username)}
-          </div>
-          <p
-            className="truncate font-mono text-[11px] font-medium text-text-secondary"
-            title={player?.id}
-          >
-            {formatPlayerId(player?.id)}
-          </p>
-        </div>
+          </span>
+          <span className="flex min-w-0 flex-col items-start leading-tight">
+            <span className="max-w-[92px] truncate font-body text-[12px] font-medium text-txt">
+              {player?.username ?? 'Player'}
+            </span>
+            <span className="font-mono text-[10px] text-txt-muted">
+              {formatPlayerId(player?.id)}
+            </span>
+          </span>
+        </button>
 
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-          <div className="flex max-w-[140px] items-center gap-2 rounded-full border border-[#F5C542]/40 bg-[#2a1d09]/90 px-3 py-1.5 shadow-[0_0_12px_rgba(245,197,66,0.18)]">
-            <CoinIcon />
-            <span className="truncate font-mono text-[14px] font-bold tabular-nums text-[#FFD86A]">
+        <div className="flex shrink-0 items-center gap-2">
+          <div
+            className="flex items-center gap-2 rounded-full bg-surface-1 px-3 py-1.5"
+            style={{ boxShadow: 'inset 0 1px 0 var(--hairline)' }}
+          >
+            <Chip size={18} />
+            <span className="font-mono text-[14px] font-medium tabular-nums text-gold">
               {balance.toFixed(2)}
             </span>
           </div>
@@ -101,7 +86,8 @@ export default function TopBar() {
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#caa13e]/25 bg-[#2a1d09]/80 text-text-primary transition-colors hover:border-[#F5C542]/50 hover:bg-[#3a2810]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-1 text-txt-sub transition-colors hover:text-txt"
+            style={{ boxShadow: 'inset 0 1px 0 var(--hairline)' }}
             aria-label="Open menu"
           >
             <MenuIcon />
@@ -115,34 +101,26 @@ export default function TopBar() {
         onWithdraw={() => openFromMenu(() => setWithdrawOpen(true))}
         onCashback={() => openFromMenu(() => setCashbackOpen(true))}
         onLeaderboard={() => openFromMenu(() => setLeaderboardOpen(true))}
+        onChangePassword={() => openFromMenu(() => setChangePwOpen(true))}
       />
 
-      <Modal
-        isOpen={withdrawOpen}
-        onClose={() => setWithdrawOpen(false)}
-        title="Withdrawal"
-      >
+      <Modal isOpen={withdrawOpen} onClose={() => setWithdrawOpen(false)} title="Withdrawal">
         <p>Contact your vendor to withdraw.</p>
       </Modal>
 
-      <Modal
-        isOpen={cashbackOpen}
-        onClose={() => setCashbackOpen(false)}
-        title="Cash Back"
-      >
+      <Modal isOpen={cashbackOpen} onClose={() => setCashbackOpen(false)} title="Cash back">
         <p className="mb-3">Your available cashback balance:</p>
-        <p className="font-mono text-2xl font-bold text-gold-shine">
-          ${cashbackBalance.toFixed(2)}
-        </p>
+        <div className="flex items-center gap-2">
+          <Chip size={22} />
+          <span className="font-mono text-2xl font-medium tabular-nums text-gold">
+            {cashbackBalance.toFixed(2)}
+          </span>
+        </div>
       </Modal>
 
-      <Modal
-        isOpen={leaderboardOpen}
-        onClose={() => setLeaderboardOpen(false)}
-        title="Leaderboard"
-      >
-        <p>Top players this week will appear here.</p>
-      </Modal>
+      <Leaderboard isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
+
+      <ChangePassword isOpen={changePwOpen} onClose={() => setChangePwOpen(false)} />
     </>
   )
 }

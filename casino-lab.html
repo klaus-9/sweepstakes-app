@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUWA — casino elements lab (tasteful, tone-on-tone)</title>
+<style>
+  :root{
+    --bg:#0E1117; --bg2:#0B0E13; --surface:#171B24; --surface2:#1C212C;
+    --border:#262B36; --hair:rgba(255,255,255,.06);
+    --text:#E7EAF0; --sub:#8A93A6; --violet:#6C5CE7; --gold:#F5C451; --gold2:#C9973A;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg2);color:var(--text);font-family:var(--font);padding:32px;line-height:1.5}
+  h1{font-size:22px;font-weight:600;margin-bottom:4px}
+  .lede{color:var(--sub);font-size:14px;margin-bottom:8px;max-width:660px}
+  .lede b{color:var(--text)}
+  h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--sub);margin:34px 0 6px}
+  .hint{color:var(--sub);font-size:12px;margin-bottom:14px}
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+  .panel{width:240px;height:150px;border-radius:14px;background:var(--surface);border:1px solid var(--hair);
+    position:relative;overflow:hidden;box-shadow:inset 0 1px 0 var(--hair),0 6px 18px rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center}
+
+  /* 1. EMBOSS — single suit, same tone as surface, revealed only by light */
+  .emboss{font-size:96px;line-height:1;color:#12151d;
+    text-shadow:0 1px 0 rgba(255,255,255,.05), 0 -1px 0 rgba(0,0,0,.6);}
+
+  /* 2. TILED watermark — faint repeating suits */
+  .tiled::before{content:"";position:absolute;inset:0;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ctext x='8' y='24' font-size='20' fill='%23ffffff'%3E%E2%99%A0%3C/text%3E%3Ctext x='34' y='50' font-size='20' fill='%23ffffff'%3E%E2%99%A6%3C/text%3E%3C/svg%3E");}
+  .tiled span{position:relative;color:var(--sub);font-size:13px}
+
+  /* 3. ART-DECO divider */
+  .deco{display:flex;align-items:center;gap:12px;width:240px;color:var(--gold)}
+  .deco .ln{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(245,196,81,.4),transparent)}
+  .deco .dot{font-size:12px;opacity:.8}
+
+  /* 4. BUTTONS with a whisper of motif */
+  .btns{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{position:relative;overflow:hidden;padding:13px 26px;border-radius:12px;font-size:15px;font-weight:600;color:#fff;
+    background:linear-gradient(180deg,#7a6bf0,#5a49d0);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px rgba(76,63,176,.4)}
+  .btn .ghost-suit{position:absolute;right:-6px;bottom:-14px;font-size:52px;color:rgba(255,255,255,.08);pointer-events:none}
+  .btn-gold{position:relative;overflow:hidden;padding:13px 26px;border-radius:12px;font-size:15px;font-weight:700;color:#3a2c05;
+    background:linear-gradient(180deg,#ffdd85,#e0a53d);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 14px rgba(201,151,58,.35)}
+  .btn-gold .ghost-suit{position:absolute;right:-4px;bottom:-12px;font-size:48px;color:rgba(58,44,5,.14)}
+  .btn-etch{padding:13px 26px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text);
+    background:var(--surface);border:1px solid var(--hair);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.02)}
+
+  /* 5. POKER-CHIP coin (pure CSS) */
+  .chip{width:30px;height:30px;border-radius:50%;position:relative;flex-shrink:0;
+    background:radial-gradient(circle at 34% 30%, #ffe39a, var(--gold) 52%, var(--gold2));
+    box-shadow:0 0 0 2px #12151d, 0 0 0 3px rgba(255,255,255,.08), inset 0 0 0 4px rgba(0,0,0,.12)}
+  .chip::before{content:"";position:absolute;inset:5px;border-radius:50%;border:2px dashed rgba(58,44,5,.35)}
+  .pill{display:inline-flex;align-items:center;gap:9px;padding:7px 14px 7px 8px;border-radius:24px;
+    background:linear-gradient(180deg,#20242e,#161a22);box-shadow:inset 0 1px 0 var(--hair)}
+  .pill b{color:var(--gold);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+  .compare{display:flex;align-items:center;gap:8px}
+  .olddot{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffdf8a,var(--gold) 55%,var(--gold2))}
+
+  /* 6. ETCHED card-frame corners */
+  .framed{width:240px;height:150px;border-radius:14px;background:var(--surface);position:relative;
+    box-shadow:inset 0 1px 0 var(--hair),0 6px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px}
+  .framed span.c{position:absolute;width:22px;height:22px;border-color:rgba(245,196,81,.35);border-style:solid;border-width:0}
+  .framed .tl{top:10px;left:10px;border-top-width:1px;border-left-width:1px;border-top-left-radius:6px}
+  .framed .tr{top:10px;right:10px;border-top-width:1px;border-right-width:1px;border-top-right-radius:6px}
+  .framed .bl{bottom:10px;left:10px;border-bottom-width:1px;border-left-width:1px;border-bottom-left-radius:6px}
+  .framed .br{bottom:10px;right:10px;border-bottom-width:1px;border-right-width:1px;border-bottom-right-radius:6px}
+
+  /* 7. Spinning chip loader */
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .chip.load{animation:spin 1.4s linear infinite;width:38px;height:38px}
+  .cap{color:var(--sub);font-size:12px;margin-top:8px;max-width:240px}
+  .cap b{color:var(--text);font-weight:600}
+  .note{color:var(--sub);font-size:12px;margin-top:26px;border-top:1px solid var(--border);padding-top:16px;max-width:660px}
+</style>
+</head>
+<body>
+  <h1>JUWA — casino elements, the premium way</h1>
+  <p class="lede">Everything here is <b>tone-on-tone</b> — casino motifs revealed by light and shadow, never by loud color. This is "quiet luxury casino," the opposite of Fire Kirin. All pure CSS/SVG.</p>
+
+  <h2>1 · Emboss watermark</h2>
+  <p class="hint">A single suit, same tone as the surface — you feel it before you see it. Good behind cards / empty states.</p>
+  <div class="row">
+    <div class="panel"><span class="emboss">&#9824;</span></div>
+    <div class="panel"><span class="emboss">&#9670;</span></div>
+    <div class="panel tiled"><span>tiled suits @ 5% &mdash; panel fill</span></div>
+  </div>
+
+  <h2>2 · Art-deco divider</h2>
+  <p class="hint">For section headers and modal titles — a faint gold rule with a center mark.</p>
+  <div class="deco"><span class="ln"></span><span class="dot">&#9670;</span><span class="ln"></span></div>
+
+  <h2>3 · Buttons — a whisper of motif</h2>
+  <p class="hint">A ghost suit tucked in the corner, or just an etched edge. Never a printed icon.</p>
+  <div class="btns">
+    <div class="btn">Play<span class="ghost-suit">&#9824;</span></div>
+    <div class="btn-gold">Collect<span class="ghost-suit">&#9830;</span></div>
+    <div class="btn-etch">Cash out</div>
+  </div>
+
+  <h2>4 · Poker-chip coin  &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--sub)">(the biggest bang for the buck)</span></h2>
+  <p class="hint">Swap the plain gold dot for a real chip. Instant casino read, still tasteful.</p>
+  <div class="row" style="align-items:center">
+    <div class="pill"><span class="chip"></span><b>1,240</b></div>
+    <div class="compare"><span style="color:var(--sub);font-size:12px">vs. old:</span><span class="olddot"></span></div>
+  </div>
+
+  <h2>5 · Etched frame corners</h2>
+  <p class="hint">Thin art-deco brackets on premium panels (leaderboard, jackpot cards).</p>
+  <div class="framed"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>panel content</div>
+
+  <h2>6 · Spinning-chip loader</h2>
+  <p class="hint">Replaces the generic spinner in casino contexts.</p>
+  <div class="chip load"></div>
+
+  <p class="note"><b style="color:var(--text)">Restraint rule:</b> pick <b style="color:var(--text)">two or three</b> of these, not all six. My pick: the <b style="color:var(--text)">chip coin</b> (everywhere money shows) + a <b style="color:var(--text)">faint background watermark</b> + the <b style="color:var(--text)">art-deco divider</b> on headers. Buttons stay mostly clean with maybe the ghost-suit only on the primary CTA. That's enough to say "casino" without shouting.</p>
+</body>
+</html>

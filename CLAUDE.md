@@ -12,6 +12,18 @@ and act on them for the entire session:
 3. **`About Me/memory.md`** — my running memory of where projects stand. Read it to regain
    context, and **keep it updated** (see below).
 
+Also read the Sachit's central **Brain** vault at `~/Desktop/Brain/` at session start:
+`Brain/Instructions/*.md` (standing rules/preferences) and `Brain/Memory/*.md` (carried-over
+context). A SessionStart hook auto-injects these, but read them directly too if they aren't
+already in context. His name is **Sachit** (sometimes Ankit — same person); greet him as Sachit.
+
+## Save-to-Brain
+
+When Sachit says **"save this to my Brain"** (or similar), write a clean, self-contained
+Markdown note into the right `~/Desktop/Brain/` subfolder — `Memory/` for session takeaways
+and decisions, `Documents/` for reference material, `Instructions/` for standing rules. Give
+it an obvious filename, no fixed naming convention. Confirm what you saved and where.
+
 ## Keep memory current
 
 `About Me/memory.md` is the system that stops me forgetting where we are.

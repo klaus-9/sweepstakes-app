@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AudioEngine from '../../services/AudioEngine'
 import { eventBus, EVENTS } from '../../phaser/eventBus'
 import { useGameStore } from '../../store/gameStore'
+import BetModal from './BetModal'
 
 function BackIcon() {
   return (
@@ -23,10 +24,17 @@ function BackIcon() {
 export default function GameHUD() {
   const navigate = useNavigate()
   const isSpinning = useGameStore((state) => state.isSpinning)
+  const [betOpen, setBetOpen] = useState(false)
 
   useEffect(() => {
     AudioEngine.unlock()
     AudioEngine.playBGM('bgm_ambient')
+  }, [])
+
+  useEffect(() => {
+    const open = () => setBetOpen(true)
+    eventBus.on(EVENTS.OPEN_BET, open)
+    return () => eventBus.off(EVENTS.OPEN_BET, open)
   }, [])
 
   // The scene owns balance/lastWin/spinning + the result popup. The HUD just
@@ -53,16 +61,20 @@ export default function GameHUD() {
   }, [handleSpinResult])
 
   return (
-    <div className="pointer-events-none absolute inset-0">
-      <button
-        type="button"
-        onClick={() => navigate('/lobby')}
-        disabled={isSpinning}
-        className="pointer-events-auto absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65 disabled:opacity-40"
-        aria-label="Back to lobby"
-      >
-        <BackIcon />
-      </button>
-    </div>
+    <>
+      <div className="pointer-events-none absolute inset-0">
+        <button
+          type="button"
+          onClick={() => navigate('/lobby')}
+          disabled={isSpinning}
+          className="pointer-events-auto absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65 disabled:opacity-40"
+          aria-label="Back to lobby"
+        >
+          <BackIcon />
+        </button>
+      </div>
+
+      <BetModal isOpen={betOpen} onClose={() => setBetOpen(false)} />
+    </>
   )
 }

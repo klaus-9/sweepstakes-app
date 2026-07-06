@@ -3,6 +3,7 @@ export const EVENTS = {
   SPIN_STARTED: 'SPIN_STARTED',
   SPIN_RESULT: 'SPIN_RESULT',
   BIG_WIN: 'BIG_WIN',
+  OPEN_BET: 'OPEN_BET',
 }
 
 class EventBus {

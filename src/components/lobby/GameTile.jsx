@@ -1,30 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import AudioEngine from '../../services/AudioEngine'
+import Badge from '../ui/Badge'
 
-const PLAYABLE_GAME_ID = 'magic_wheel_7s'
-
-const GLOW_COLORS = [
-  'shadow-[0_0_24px_rgba(245,197,66,0.22)]',
-  'shadow-[0_0_24px_rgba(120,200,80,0.2)]',
-  'shadow-[0_0_24px_rgba(245,166,35,0.22)]',
-  'shadow-[0_0_24px_rgba(90,180,90,0.2)]',
-  'shadow-[0_0_24px_rgba(231,140,60,0.2)]',
-  'shadow-[0_0_24px_rgba(212,169,58,0.22)]',
-]
-
-export default function GameTile({
-  id,
-  title,
-  badge = null,
-  icon = '🎰',
-  index = 0,
-}) {
+export default function GameTile({ id, title, badge = null, image = null, playable = false }) {
   const navigate = useNavigate()
-  const glow = GLOW_COLORS[index % GLOW_COLORS.length]
-  const isPlayable = id === PLAYABLE_GAME_ID
+  const initial = title?.[0]?.toUpperCase() ?? '?'
 
   function openGame() {
-    if (!isPlayable) return
+    if (!playable) return
     AudioEngine.unlock()
     AudioEngine.playSFX('click')
     navigate(`/game/${id}`)
@@ -34,57 +17,53 @@ export default function GameTile({
     <button
       type="button"
       onClick={openGame}
-      onMouseEnter={() => isPlayable && AudioEngine.playSFX('hover')}
-      disabled={!isPlayable}
-      aria-disabled={!isPlayable}
-      aria-label={isPlayable ? title : `${title} — coming soon`}
-      className={`group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#caa13e]/30 bg-gradient-to-b from-[#2e2410] to-[#1c1409] text-left shadow-lg transition-transform duration-200 ${
-        isPlayable ? 'active:scale-[0.97]' : 'cursor-not-allowed'
-      } ${glow}`}
+      onMouseEnter={() => playable && AudioEngine.playSFX('hover')}
+      disabled={!playable}
+      aria-disabled={!playable}
+      aria-label={playable ? title : `${title} — coming soon`}
+      className={`group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-hair text-left transition-transform duration-200 ${
+        playable ? 'hover:border-accent/50 active:scale-[0.97]' : 'cursor-not-allowed'
+      }`}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(245,197,66,0.16),transparent_65%)]" />
-
-      <span className="tile-shimmer" aria-hidden="true" />
-
-      <div className="relative flex h-full flex-col items-center justify-center px-3 pb-10 pt-4">
-        <span
-          className="text-[42px] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-transform duration-200 group-active:scale-95"
+      {image ? (
+        <img
+          src={image}
+          alt=""
           aria-hidden="true"
+          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+            playable ? '' : 'opacity-85'
+          }`}
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center bg-surface-1 font-display text-[40px] font-semibold text-txt-muted opacity-50"
         >
-          {icon}
-        </span>
-      </div>
-
-      {badge === 'hot' && (
-        <span className="badge-pulse absolute right-2 top-2 z-[2] rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_12px_rgba(239,68,68,0.55)]">
-          HOT
+          {initial}
         </span>
       )}
 
-      {badge === 'new' && (
-        <span className="badge-pulse absolute right-2 top-2 z-[2] rounded-full bg-gradient-to-r from-green-cta to-emerald-400 px-2 py-0.5 font-roboto text-[9px] font-bold uppercase tracking-wider text-[#0D0D1A] shadow-[0_0_12px_rgba(39,174,96,0.45)]">
-          NEW
-        </span>
-      )}
+      {/* Bottom scrim so the title stays legible over art */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg-deep/90 via-bg-deep/10 to-transparent"
+      />
 
-      <div className="absolute bottom-0 left-0 right-0 border-t border-white/5 bg-black/40 px-2 py-2 text-center backdrop-blur-sm">
-        <p className="truncate font-roboto text-xs font-semibold tracking-wide text-white">
+      {playable && <span className="tile-shimmer" aria-hidden="true" />}
+
+      <span className="absolute right-2 top-2 z-[2]">
+        {playable ? badge && <Badge kind={badge} /> : <Badge kind="soon" />}
+      </span>
+
+      <div className="absolute inset-x-0 bottom-0 z-[2] px-3 py-2.5">
+        <p
+          className={`truncate font-body text-[13px] font-semibold ${
+            playable ? 'text-txt' : 'text-txt-sub'
+          }`}
+        >
           {title}
         </p>
       </div>
-
-      {!isPlayable && (
-        <div
-          className="coming-soon-tile-overlay absolute inset-0 z-[3] flex items-center justify-center p-3"
-          aria-hidden="true"
-        >
-          <div className="coming-soon-glass coming-soon-glass--tile flex w-full items-center justify-center rounded-xl px-3 py-4">
-            <p className="font-oswald text-sm font-bold uppercase tracking-[0.18em] text-white">
-              Coming Soon
-            </p>
-          </div>
-        </div>
-      )}
     </button>
   )
 }

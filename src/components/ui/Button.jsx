@@ -1,13 +1,5 @@
 import AudioEngine from '../../services/AudioEngine'
-
-function Spinner() {
-  return (
-    <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-bg-primary/30 border-t-bg-primary"
-      aria-hidden="true"
-    />
-  )
-}
+import Spinner from './Spinner'
 
 export default function Button({
   children,
@@ -22,10 +14,10 @@ export default function Button({
   const isDisabled = disabled || loading
 
   const variants = {
-    primary:
-      'bg-green-cta text-bg-primary hover:bg-green-cta/90 focus-visible:ring-green-cta/50',
-    secondary:
-      'bg-purple-primary text-text-primary hover:bg-purple-primary/90 focus-visible:ring-purple-primary/50',
+    primary: 'bg-accent text-white hover:bg-accent/90 focus-visible:ring-accent/50',
+    gold: 'bg-gold text-[#3a2c05] hover:bg-gold/90 focus-visible:ring-gold/50',
+    ghost:
+      'bg-transparent border border-hair text-txt hover:bg-surface-1 focus-visible:ring-hair',
   }
 
   // Every button auto-clicks and gives tactile compression on press.
@@ -40,12 +32,22 @@ export default function Button({
       type={type}
       onClick={handleClick}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-roboto text-[15px] font-bold transition-transform duration-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
+      style={variant !== 'ghost' ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2)' } : undefined}
+      className={`relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-display text-[15px] font-semibold transition-transform duration-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
         variants[variant]
       } ${pulse && !isDisabled ? 'animate-neon-pulse' : ''} ${fullWidth ? 'w-full' : ''}`}
     >
-      {loading && <Spinner />}
+      {loading && <Spinner size={16} className="text-current" />}
       {children}
+      {variant === 'primary' && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-3.5 -right-1.5 text-[52px] leading-none"
+          style={{ color: 'rgba(255,255,255,.08)' }}
+        >
+          ♠
+        </span>
+      )}
     </button>
   )
 }

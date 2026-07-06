@@ -14,7 +14,7 @@ export default function Input({
       {label && (
         <label
           htmlFor={id}
-          className="mb-1.5 block font-roboto text-[13px] font-semibold text-text-secondary"
+          className="mb-1.5 block font-body text-[13px] font-medium text-txt-sub"
         >
           {label}
         </label>
@@ -27,8 +27,8 @@ export default function Input({
         placeholder={placeholder}
         autoComplete={autoComplete}
         disabled={disabled}
-        className={`w-full rounded-lg border bg-bg-surface px-4 py-3 font-roboto text-[15px] text-text-primary outline-none transition-colors placeholder:text-text-secondary/60 focus:border-purple-primary disabled:cursor-not-allowed disabled:opacity-60 ${
-          error ? 'border-red-500' : 'border-bg-card'
+        className={`w-full rounded-lg border bg-surface-1 px-4 py-3 font-body text-[15px] text-txt outline-none transition-colors placeholder:text-txt-muted focus:border-accent focus:shadow-[0_0_0_3px_rgba(108,92,231,0.25)] disabled:cursor-not-allowed disabled:opacity-60 ${
+          error ? 'border-danger' : 'border-border'
         }`}
       />
     </div>

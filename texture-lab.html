@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUWA — Midnight Arcade texture lab (CSS only)</title>
+<style>
+  :root{
+    --bg:#0E1117; --bg2:#0B0E13;
+    --surface:#171B24; --surface2:#1C212C;
+    --border:#262B36; --hair:rgba(255,255,255,.06);
+    --text:#E7EAF0; --sub:#8A93A6;
+    --violet:#6C5CE7; --violet-deep:#4B3FB0;
+    --gold:#F5C451; --gold-deep:#C9973A;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg2);color:var(--text);font-family:var(--font);padding:32px;line-height:1.5}
+  h1{font-size:22px;font-weight:600;margin-bottom:4px}
+  .lede{color:var(--sub);font-size:14px;margin-bottom:28px;max-width:640px}
+  h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:34px 0 14px}
+  .row{display:flex;flex-wrap:wrap;gap:16px}
+  .cell{width:190px}
+  .cap{font-size:12px;color:var(--sub);margin-top:8px}
+  .cap b{color:var(--text);font-weight:600}
+  .swatch{height:150px;border-radius:14px;position:relative;overflow:hidden;border:1px solid var(--hair)}
+
+  /* --- NOISE: a reusable grain overlay via SVG feTurbulence --- */
+  .grain::after{content:"";position:absolute;inset:0;opacity:.05;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .grain-strong::after{opacity:.09}
+
+  /* --- BASE BACKGROUND treatments --- */
+  .b-flat{background:var(--bg)}
+  .b-depth{background:radial-gradient(120% 80% at 50% 15%, #161B26 0%, var(--bg) 55%, var(--bg2) 100%)}
+  .b-indigo{background:radial-gradient(130% 90% at 50% 0%, #1a1c33 0%, #0f1119 45%, #0a0b12 100%)}
+
+  /* --- CARD / SURFACE treatments --- */
+  .c-matte{background:var(--surface);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .c-felt{background:radial-gradient(140% 120% at 50% 0%, #1d2330 0%, #151a24 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -20px 40px rgba(0,0,0,.35)}
+  .c-metal{background:linear-gradient(180deg,#1e232e 0%,#141821 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.4)}
+  .c-metal::before{content:"";position:absolute;inset:0;opacity:.5;
+    background:repeating-linear-gradient(180deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px)}
+
+  /* --- ACCENT chips --- */
+  .accents{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{padding:12px 22px;border-radius:11px;font-size:14px;font-weight:600;color:#fff;
+    background:linear-gradient(180deg,#7a6bf0,#5a49d0);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 4px 14px rgba(76,63,176,.45)}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:22px;
+    background:linear-gradient(180deg,#20242e,#161a22);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  .pill .coin{width:16px;height:16px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffdf8a, var(--gold) 55%, var(--gold-deep));
+    box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+  .pill b{color:var(--gold);font-size:14px;font-weight:600}
+  .btn-gold{padding:12px 22px;border-radius:11px;font-size:14px;font-weight:700;color:#3a2c05;
+    background:linear-gradient(180deg,#ffdd85,#e0a53d);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 4px 14px rgba(201,151,58,.35)}
+
+  /* --- ASSEMBLED PHONE --- */
+  .phone{width:300px;border-radius:26px;padding:16px;
+    background:radial-gradient(130% 90% at 50% 0%, #1a1c33 0%, #0f1119 45%, #0a0b12 100%);
+    border:1px solid var(--hair);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .who{display:flex;align-items:center;gap:9px}
+  .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(180deg,#7a6bf0,#5a49d0);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+  .who span{font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .tile{height:78px;border-radius:12px;display:flex;align-items:flex-end;padding:9px;font-size:12px;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 -30px 40px rgba(0,0,0,.25);position:relative;overflow:hidden}
+  .t-jungle{background:linear-gradient(160deg,#3a9068,#245840);color:#eaf7ef}
+  .t-ocean{background:linear-gradient(160deg,#3a82c8,#20507f);color:#e7f1fb}
+  .t-fire{background:linear-gradient(160deg,#d0644a,#8f3826);color:#fbebe7}
+  .t-fortune{background:linear-gradient(160deg,#7d5ab0,#4d3378);color:#efeaf7}
+  .nav{display:flex;justify-content:space-around;margin-top:15px;padding-top:13px;border-top:1px solid var(--hair);color:var(--sub);font-size:18px}
+  .nav .on{color:var(--violet)}
+  .note{color:var(--sub);font-size:12px;margin-top:24px;max-width:640px;border-top:1px solid var(--border);padding-top:16px}
+</style>
+</head>
+<body>
+  <h1>JUWA — Midnight Arcade texture lab</h1>
+  <p class="lede">Everything below is <b style="color:var(--text)">pure CSS</b> — no images. Grain via SVG noise, depth via soft gradients, material via hairline highlights + inner shadow. This is the "premium = material, not flat" idea, built in code so it's fully tweakable.</p>
+
+  <h2>Base background · flat vs. textured</h2>
+  <div class="row">
+    <div class="cell"><div class="swatch b-flat"></div><div class="cap"><b>Flat</b> — dead color (the old mockup)</div></div>
+    <div class="cell"><div class="swatch b-depth grain"></div><div class="cap"><b>Grain + depth</b> — soft top-light, fine noise</div></div>
+    <div class="cell"><div class="swatch b-indigo grain"></div><div class="cap"><b>Indigo depth</b> — faint violet undertone</div></div>
+  </div>
+
+  <h2>Card / surface material</h2>
+  <div class="row">
+    <div class="cell"><div class="swatch c-matte grain"></div><div class="cap"><b>Matte</b> — subtle top highlight</div></div>
+    <div class="cell"><div class="swatch c-felt grain"></div><div class="cap"><b>Felt</b> — inner depth, soft shadow</div></div>
+    <div class="cell"><div class="swatch c-metal grain"></div><div class="cap"><b>Brushed metal</b> — fine lines + edge light</div></div>
+  </div>
+
+  <h2>Accents · matte, not shiny</h2>
+  <div class="row accents">
+    <div class="btn">Play</div>
+    <div class="btn-gold">Collect</div>
+    <div class="pill"><span class="coin"></span><b>1,240</b></div>
+  </div>
+
+  <h2>Assembled — textured shell, colorful games</h2>
+  <div class="phone grain">
+    <div class="top">
+      <div class="who"><div class="av">S</div><span>Sachit</span></div>
+      <div class="pill"><span class="coin"></span><b>1,240</b></div>
+    </div>
+    <div class="grid">
+      <div class="tile t-jungle grain">Jungle</div>
+      <div class="tile t-ocean grain">Ocean</div>
+      <div class="tile t-fire grain">Fire 7s</div>
+      <div class="tile t-fortune grain">Fortune</div>
+    </div>
+    <div class="btn" style="text-align:center;display:block">Play</div>
+    <div class="nav"><span class="on">&#9632;</span><span>&#9671;</span><span>&#9733;</span><span>&#9679;</span></div>
+  </div>
+
+  <p class="note">Notice: the shell reads as tactile dark material, gold shows up only on the balance pill and the Collect button, and the game tiles carry all the color. Adjust any value at the top of the <code>&lt;style&gt;</code> block — grain opacity, the indigo amount, highlight strength — to taste.</p>
+</body>
+</html>

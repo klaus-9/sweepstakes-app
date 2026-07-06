@@ -13,14 +13,14 @@ const GAME_HEIGHT = 1080
 const COLS = 5
 const ROWS = 3
 // Dark reel window measured from the frame art: x 320–1605, y 236–722.
-const REEL_X0 = 320
-const REEL_Y0 = 236
-const CELL_W = 257
-const CELL_H = 162
-const REEL_W = COLS * CELL_W
+// Reel window measured from the clean frame art (frame-clean.png): (448,200)-(1475,838).
+const REEL_X0 = 448
+const REEL_Y0 = 200
+const CELL_W = 205
+const CELL_H = 213
 const REEL_H = ROWS * CELL_H
 // Symbols stay smaller than the cell so rows have clear gaps between them.
-const SYMBOL_SIZE = 132
+const SYMBOL_SIZE = 150
 
 const BUFFER_ABOVE = 2
 const BUFFER_BELOW = 2
@@ -32,49 +32,37 @@ const ANTICIPATION_DELAY_REEL4_MS = 500
 const ANTICIPATION_DELAY_REEL5_MS = 1000
 const BIG_WIN_MULTIPLIER = 10
 
-const BET_LEVELS = [0.2, 0.4, 0.8, 1.0, 2.0, 5.0]
+// Simple stake: the bet is just a credit amount per spin. No paylines.
+const BET_MAX = 100
 
-// Button hit zones, in artwork coordinates (measured from the side-button art).
-const SPIN_CENTER = { x: 965, y: 1052, r: 95 }
+// Controls are DRAWN IN CODE onto the clean frame (frame-clean.png has no baked
+// buttons). Positions in 1920x1080 artwork space: side rails at x≈157 / 1765,
+// bottom bar at y≈940. Left rail: INFO, AUTO. Right rail: BET, MAX.
+const SPIN_CENTER = { x: 962, y: 964, r: 78 }
+const RAIL_L = 157
+const RAIL_R = 1765
+const BTN_R = 54
 const BTN = {
-  betUp: { x: 1811, y: 743, w: 150, h: 150 }, // "Bet x Line"
-  betMax: { x: 1817, y: 543, w: 170, h: 170 }, // "Bet Max"
-  lines: { x: 1815, y: 341, w: 150, h: 150 }, // "Lines"
-  auto: { x: 106, y: 543, w: 170, h: 170 }, // "Auto Start"
-  info: { x: 112, y: 743, w: 150, h: 150 }, // "Info"
-}
-const LINE_PRESETS = [1, 5, 10, 15, 20]
-
-// Readout panel value positions (in the dark value strip of each wooden panel).
-const PANEL = {
-  lines: { x: 143, y: 1014 },
-  lineBet: { x: 379, y: 1014 },
-  totalBet: { x: 616, y: 1014 },
-  won: { x: 1305, y: 1014 },
-  credits: { x: 1541, y: 1014 },
+  info: { x: RAIL_L, y: 400 },
+  auto: { x: RAIL_L, y: 620 },
+  bet: { x: RAIL_R, y: 400 },
+  max: { x: RAIL_R, y: 620 },
 }
 
-// Payline number badges flanking the reels — clicking one sets the line count.
-const BADGES = [
-  { n: 1, cx: 276, cy: 584 }, { n: 2, cx: 276, cy: 367 }, { n: 3, cx: 276, cy: 744 },
-  { n: 4, cx: 276, cy: 313 }, { n: 5, cx: 276, cy: 798 }, { n: 6, cx: 1649, cy: 530 },
-  { n: 7, cx: 1649, cy: 584 }, { n: 8, cx: 1649, cy: 692 }, { n: 9, cx: 1649, cy: 421 },
-  { n: 10, cx: 276, cy: 530 }, { n: 11, cx: 276, cy: 638 }, { n: 12, cx: 1649, cy: 367 },
-  { n: 13, cx: 1649, cy: 744 }, { n: 14, cx: 1649, cy: 313 }, { n: 15, cx: 1649, cy: 798 },
-  { n: 16, cx: 276, cy: 475 }, { n: 17, cx: 276, cy: 692 }, { n: 18, cx: 1649, cy: 475 },
-  { n: 19, cx: 1649, cy: 638 }, { n: 20, cx: 276, cy: 421 },
-]
-const BADGE_W = 70
-const BADGE_H = 56
+// Readout label+value anchors on the bottom bar (flanking the SPIN button).
+const READOUT = {
+  credits: { x: 548, y: 940 },
+  totalBet: { x: 762, y: 940 },
+  won: { x: 1252, y: 940 },
+}
 
-function totalBet() {
-  const { betAmount, lines } = useGameStore.getState()
-  return Number((betAmount * lines).toFixed(2))
+function currentBet() {
+  return Number(useGameStore.getState().betAmount.toFixed(2))
 }
 
 const ASSETS = [
   { key: 'jungle_bg', path: '/assets/jungle/background.png' },
-  { key: 'jungle_plate', path: '/assets/jungle/chrome_plate.png' },
+  { key: 'jungle_plate', path: '/assets/jungle/frame-clean.png' },
   { key: 'jungle_monkey', path: '/assets/jungle/monkey.png' },
   { key: 'jungle_spin', path: '/assets/jungle/spin.png' },
   { key: 'particle', path: '/assets/particle.png' },
@@ -168,6 +156,7 @@ export default class SlotScene extends Phaser.Scene {
 
       this.setupMonkey()
       this.setupSpinButton()
+      this.setupControls()
       this.setupReadouts()
       this.setupInputZones()
       this.setupAmbientParticles()
@@ -307,33 +296,78 @@ export default class SlotScene extends Phaser.Scene {
     })
   }
 
-  // The monkey is hidden until a win, then it pops up from the bottom-left,
-  // cheers, and slides back out.
+  // Hidden until a MEGA win, then peeks up from the far bottom-left corner.
+  // Kept small + hard against the left edge so it never covers the CREDITS
+  // readout (which sits at x≈548 on the bottom bar).
   setupMonkey() {
     if (!this.hasTexture('jungle_monkey')) return
-    // Bottom-left anchored, ABOVE the overflow covers (depth 8) so the whole
-    // body shows on a win instead of being clipped at the reel-window edge.
-    this.monkeyRestY = GAME_HEIGHT + 30
-    this.monkeyHideY = GAME_HEIGHT + 760
-    this.monkey = this.add.image(15, this.monkeyHideY, 'jungle_monkey')
+    this.monkeyRestY = GAME_HEIGHT + 20
+    this.monkeyHideY = GAME_HEIGHT + 620
+    this.monkey = this.add.image(-14, this.monkeyHideY, 'jungle_monkey')
       .setOrigin(0, 1)
-      .setScale(0.82)
-      .setDepth(9)
+      .setScale(0.6)
+      .setDepth(11)
       .setAlpha(0)
   }
 
   // A separate SPIN sprite over the baked plate button so it can react to taps.
   setupSpinButton() {
     if (!this.hasTexture('jungle_spin')) return
-    this.spinButton = this.add.image(SPIN_CENTER.x, 1044, 'jungle_spin').setDepth(9)
+    this.spinButton = this.add.image(SPIN_CENTER.x, SPIN_CENTER.y, 'jungle_spin').setDepth(9)
+    // Preserve aspect ratio (size by width) so the baked leaves aren't squished.
+    this.spinBaseScale = (SPIN_CENTER.r * 2 + 40) / this.spinButton.width
+    this.spinButton.setScale(this.spinBaseScale)
+  }
+
+  // Draw a round control button (dark wood + gold ring + label) with a hit zone.
+  // Returns the dynamic value Text (or null) so readouts can update it.
+  makeControlButton(x, y, label, sub, onTap) {
+    this.add.circle(x, y, BTN_R, 0x241812, 1).setStrokeStyle(4, 0xe0b24a).setDepth(9)
+    this.add
+      .text(x, sub != null ? y - 13 : y, label, {
+        fontFamily: 'Sora, Arial, sans-serif',
+        fontSize: 19,
+        fontStyle: 'bold',
+        color: '#f3e4c0',
+      })
+      .setOrigin(0.5)
+      .setDepth(10)
+    let valueText = null
+    if (sub != null) {
+      valueText = this.add
+        .text(x, y + 15, sub, {
+          fontFamily: 'Roboto Mono, monospace',
+          fontSize: 18,
+          color: '#f5c451',
+        })
+        .setOrigin(0.5)
+        .setDepth(10)
+    }
+    this.addZone(x, y, BTN_R * 2, BTN_R * 2, onTap)
+    return valueText
+  }
+
+  setupControls() {
+    const { betAmount } = useGameStore.getState()
+    this.makeControlButton(BTN.info.x, BTN.info.y, 'INFO', null, () => this.togglePaytable())
+    this.makeControlButton(BTN.auto.x, BTN.auto.y, 'AUTO', null, () => this.toggleAuto())
+    this.betValueText = this.makeControlButton(BTN.bet.x, BTN.bet.y, 'BET', betAmount.toFixed(2), () => eventBus.emit(EVENTS.OPEN_BET))
+    this.makeControlButton(BTN.max.x, BTN.max.y, 'MAX', null, () => this.maxBet())
+
+    // Glowing ring around the Auto button while auto-spin is active.
+    this.autoGlow = this.add.circle(BTN.auto.x, BTN.auto.y, BTN_R + 8)
+      .setStrokeStyle(6, 0x6fe06f)
+      .setDepth(8)
+      .setVisible(false)
   }
 
   pressSpin() {
     if (!this.spinButton) return
+    const base = this.spinBaseScale || 1
     this.tweens.killTweensOf(this.spinButton)
-    this.spinButton.setScale(1)
+    this.spinButton.setScale(base)
     this.tweens.add({
-      targets: this.spinButton, scale: 0.88, duration: 90, yoyo: true, ease: 'Quad.easeOut',
+      targets: this.spinButton, scale: base * 0.88, duration: 90, yoyo: true, ease: 'Quad.easeOut',
     })
   }
 
@@ -359,57 +393,79 @@ export default class SlotScene extends Phaser.Scene {
     })
   }
 
+  // Credits / Bet / Win readouts on the bottom bar (label above, value below).
   setupReadouts() {
-    const style = {
-      fontFamily: 'Oswald, Arial, sans-serif',
-      fontSize: 34,
-      fontStyle: 'bold',
-      color: '#FFF3C0',
+    const mk = (x, y, label, valueColor) => {
+      this.add
+        .text(x, y - 17, label, {
+          fontFamily: 'Sora, Arial, sans-serif',
+          fontSize: 15,
+          color: '#c7b48a',
+        })
+        .setOrigin(0.5)
+        .setDepth(10)
+      return this.add
+        .text(x, y + 11, '0', {
+          fontFamily: 'Roboto Mono, monospace',
+          fontSize: 29,
+          fontStyle: 'bold',
+          color: valueColor,
+        })
+        .setOrigin(0.5)
+        .setDepth(10)
     }
-    this.linesText = this.add.text(PANEL.lines.x, PANEL.lines.y, '0', style).setOrigin(0.5).setDepth(9)
-    this.lineBetText = this.add.text(PANEL.lineBet.x, PANEL.lineBet.y, '0', style).setOrigin(0.5).setDepth(9)
-    this.betText = this.add.text(PANEL.totalBet.x, PANEL.totalBet.y, '0', style).setOrigin(0.5).setDepth(9)
-    this.wonText = this.add.text(PANEL.won.x, PANEL.won.y, '0', { ...style, color: '#FFE066' }).setOrigin(0.5).setDepth(9)
-    this.creditsText = this.add.text(PANEL.credits.x, PANEL.credits.y, '0', style).setOrigin(0.5).setDepth(9)
+    this.creditsText = mk(READOUT.credits.x, READOUT.credits.y, 'CREDITS', '#f3e4c0')
+    this.betText = mk(READOUT.totalBet.x, READOUT.totalBet.y, 'BET', '#f3e4c0')
+    this.wonText = mk(READOUT.won.x, READOUT.won.y, 'WIN', '#f5c451')
   }
 
   refreshReadouts() {
-    const { balance, betAmount, lines, lastWin } = useGameStore.getState()
-    this.linesText?.setText(String(lines))
-    this.lineBetText?.setText(betAmount.toFixed(2))
-    this.betText?.setText(totalBet().toFixed(2))
+    const { balance, betAmount, lastWin } = useGameStore.getState()
+    this.betText?.setText(currentBet().toFixed(2))
     this.wonText?.setText((lastWin || 0).toFixed(2))
     this.creditsText?.setText(balance.toFixed(2))
+    this.betValueText?.setText(betAmount.toFixed(2))
   }
 
   // Pop-up after EVERY spin: gold "WIN +x" on a win, red "−x" (stake lost) on a loss.
-  showResultPopup(amount, isWin) {
+  // Win-only celebration: gold text on a soft glow (no harsh box) with the
+  // amount counting up from 0 — the "earned it" feel. Losses show nothing.
+  showWinPopup(amount) {
     this.resultPopup?.destroy()
     const cx = GAME_WIDTH / 2
     const cy = REEL_Y0 + REEL_H / 2
-    const text = isWin ? `WIN +${amount.toFixed(2)}` : `−${amount.toFixed(2)}`
-    const color = isWin ? '#FFE066' : '#FF5347'
 
-    const label = this.add.text(0, 0, text, {
-      fontFamily: 'Oswald, Arial, sans-serif',
-      fontSize: isWin ? 84 : 64,
+    const glow = this.add.circle(0, 0, 230, 0xf5c451, 0.14)
+    const label = this.add.text(0, 0, 'WIN +0.00', {
+      fontFamily: 'Sora, Arial, sans-serif',
+      fontSize: 88,
       fontStyle: 'bold',
-      color,
-      stroke: isWin ? '#2a1c05' : '#3a0a06',
-      strokeThickness: 8,
+      color: '#FFE27A',
+      stroke: '#3a2c05',
+      strokeThickness: 9,
     }).setOrigin(0.5)
 
-    const padX = 50
-    const bg = this.add.rectangle(0, 0, label.width + padX * 2, label.height + 36, 0x140d04, 0.8)
-      .setStrokeStyle(4, isWin ? 0xffd24a : 0xff5347)
-      .setOrigin(0.5)
-
-    const popup = this.add.container(cx, cy, [bg, label]).setDepth(9).setScale(0.5).setAlpha(0)
+    const popup = this.add.container(cx, cy, [glow, label]).setDepth(9).setScale(0.6).setAlpha(0)
     this.resultPopup = popup
 
     this.tweens.add({ targets: popup, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' })
     this.tweens.add({
-      targets: popup, alpha: 0, scale: 0.9, delay: 1200, duration: 320, ease: 'Quad.easeIn',
+      targets: glow, scale: { from: 0.85, to: 1.15 }, alpha: { from: 0.2, to: 0.06 },
+      duration: 900, ease: 'Sine.easeOut',
+    })
+
+    // Count the amount up from 0.
+    this.tweens.addCounter({
+      from: 0,
+      to: amount,
+      duration: Math.min(1000, 320 + amount * 3),
+      ease: 'Cubic.easeOut',
+      onUpdate: (tw) => label.setText(`WIN +${tw.getValue().toFixed(2)}`),
+      onComplete: () => label.setText(`WIN +${amount.toFixed(2)}`),
+    })
+
+    this.tweens.add({
+      targets: popup, alpha: 0, scale: 0.92, delay: 1600, duration: 340, ease: 'Quad.easeIn',
       onComplete: () => { popup.destroy(); if (this.resultPopup === popup) this.resultPopup = null },
     })
   }
@@ -422,30 +478,6 @@ export default class SlotScene extends Phaser.Scene {
 
   setupInputZones() {
     this.addZone(SPIN_CENTER.x, SPIN_CENTER.y, SPIN_CENTER.r * 2, SPIN_CENTER.r * 2, () => this.requestSpin())
-    this.addZone(BTN.betUp.x, BTN.betUp.y, BTN.betUp.w, BTN.betUp.h, () => this.cycleBet())
-    this.addZone(BTN.betMax.x, BTN.betMax.y, BTN.betMax.w, BTN.betMax.h, () => this.maxBet())
-    this.addZone(BTN.lines.x, BTN.lines.y, BTN.lines.w, BTN.lines.h, () => this.cycleLines())
-    this.addZone(BTN.auto.x, BTN.auto.y, BTN.auto.w, BTN.auto.h, () => this.toggleAuto())
-    this.addZone(BTN.info.x, BTN.info.y, BTN.info.w, BTN.info.h, () => this.togglePaytable())
-
-    // Each payline badge sets the number of active lines (raises total bet).
-    BADGES.forEach(({ n, cx, cy }) => {
-      this.addZone(cx, cy, BADGE_W, BADGE_H, () => this.setLines(n))
-    })
-
-    // Glowing ring shown around the Auto button while auto-spin is active.
-    this.autoGlow = this.add.circle(BTN.auto.x, BTN.auto.y, 96)
-      .setStrokeStyle(7, 0x6fe06f)
-      .setDepth(8)
-      .setVisible(false)
-  }
-
-  cycleLines() {
-    if (this.isProcessing) return
-    const current = useGameStore.getState().lines
-    const idx = LINE_PRESETS.indexOf(current)
-    const next = LINE_PRESETS[(idx + 1) % LINE_PRESETS.length] ?? LINE_PRESETS[0]
-    this.setLines(next)
   }
 
   toggleAuto() {
@@ -514,26 +546,9 @@ export default class SlotScene extends Phaser.Scene {
     this.paytable = overlay
   }
 
-  setLines(n) {
-    if (this.isProcessing) return
-    useGameStore.getState().setLines(n)
-    AudioEngine.playSFX('click')
-    this.refreshReadouts()
-  }
-
-  cycleBet() {
-    if (this.isProcessing) return
-    const { betAmount, setBet } = useGameStore.getState()
-    const idx = BET_LEVELS.indexOf(betAmount)
-    const next = BET_LEVELS[(idx + 1) % BET_LEVELS.length]
-    setBet(next)
-    AudioEngine.playSFX('click')
-    this.refreshReadouts()
-  }
-
   maxBet() {
     if (this.isProcessing) return
-    useGameStore.getState().setBet(BET_LEVELS[BET_LEVELS.length - 1])
+    useGameStore.getState().setBet(BET_MAX)
     AudioEngine.playSFX('click')
     this.refreshReadouts()
   }
@@ -542,7 +557,7 @@ export default class SlotScene extends Phaser.Scene {
     AudioEngine.unlock()
     if (this.isProcessing) return
     const { balance } = useGameStore.getState()
-    const stake = totalBet()
+    const stake = currentBet()
     if (balance < stake) {
       AudioEngine.playSFX('error')
       return
@@ -630,11 +645,9 @@ export default class SlotScene extends Phaser.Scene {
         const { balance } = useGameStore.getState()
         useGameStore.getState().updateBalance(Number((balance + winAmount).toFixed(2)))
         this.showWin(winAmount, betAmount, grid)
-        this.cheerMonkey()
-        this.showResultPopup(winAmount, true)
-      } else {
-        this.showResultPopup(betAmount, false)
+        this.showWinPopup(winAmount)
       }
+      // A loss just settles quietly — no punishing pop-up.
       this.refreshReadouts()
 
       eventBus.emit(EVENTS.SPIN_RESULT, { win_amount: winAmount, grid, betAmount })
@@ -648,7 +661,7 @@ export default class SlotScene extends Phaser.Scene {
       // Auto-spin: queue the next spin once the result has been shown, unless the
       // balance can no longer cover the stake.
       if (this.autoSpin) {
-        if (useGameStore.getState().balance >= totalBet()) {
+        if (useGameStore.getState().balance >= currentBet()) {
           this.time.delayedCall(1400, () => {
             if (this.autoSpin && !this.isProcessing) this.requestSpin()
           })
@@ -712,23 +725,43 @@ export default class SlotScene extends Phaser.Scene {
     this.time.delayedCall(380, () => burst.destroy())
   }
 
+  // Tiered, restrained celebration:
+  //   any win  → gentle pulse on the winning (middle) row
+  //   big ≥3×  → a light sparkle burst on the row
+  //   mega ≥10× → camera shake, monkey cheer, big-win overlay
   showWin(amount, betAmount, grid) {
+    const ratio = betAmount > 0 ? amount / betAmount : 0
     const middleRow = grid?.[1] ?? []
+
     middleRow.forEach((_symbolIndex, col) => {
-      const { x, y } = this.cellCenter(col, 1)
-      this.time.delayedCall(col * 70, () => this.explodeSymbol(x, y))
+      const symbol = this.reels[col]?.strip?.[BUFFER_ABOVE + 1]
+      if (symbol) {
+        this.tweens.add({
+          targets: symbol,
+          scaleX: symbol.scaleX * 1.16,
+          scaleY: symbol.scaleY * 1.16,
+          duration: 190,
+          yoyo: true,
+          ease: 'Quad.easeOut',
+          delay: col * 55,
+        })
+      }
+      if (ratio >= 3) {
+        const { x, y } = this.cellCenter(col, 1)
+        this.time.delayedCall(col * 70, () => this.explodeSymbol(x, y))
+      }
     })
 
-    const burst = this.add.particles(GAME_WIDTH / 2, REEL_Y0 + REEL_H / 2, this.particleTexture(), {
-      speed: { min: 250, max: 700 }, angle: { min: 0, max: 360 }, gravityY: 500,
-      lifespan: { min: 900, max: 1600 }, scale: { start: 1, end: 0 }, alpha: { start: 0.9, end: 0 },
-      blendMode: Phaser.BlendModes.ADD, tint: 0xffd86a, emitting: false,
-    }).setDepth(9)
-    burst.explode(60)
-    this.time.delayedCall(2200, () => burst.destroy())
-
-    if (betAmount > 0 && amount >= betAmount * BIG_WIN_MULTIPLIER) {
-      this.cameras.main.shake(500, 0.01)
+    if (ratio >= BIG_WIN_MULTIPLIER) {
+      const burst = this.add.particles(GAME_WIDTH / 2, REEL_Y0 + REEL_H / 2, this.particleTexture(), {
+        speed: { min: 250, max: 620 }, angle: { min: 0, max: 360 }, gravityY: 500,
+        lifespan: { min: 900, max: 1500 }, scale: { start: 0.9, end: 0 }, alpha: { start: 0.9, end: 0 },
+        blendMode: Phaser.BlendModes.ADD, tint: 0xffd86a, emitting: false,
+      }).setDepth(9)
+      burst.explode(48)
+      this.time.delayedCall(2000, () => burst.destroy())
+      this.cameras.main.shake(450, 0.008)
+      this.cheerMonkey()
       eventBus.emit(EVENTS.BIG_WIN, { amount })
     }
   }

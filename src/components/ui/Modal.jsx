@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import Divider from './Divider'
 
 export default function Modal({ isOpen, onClose, title, children }) {
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-5"
+      className="pointer-events-auto fixed inset-0 z-[100] flex items-center justify-center p-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -28,27 +29,24 @@ export default function Modal({ isOpen, onClose, title, children }) {
         aria-label="Close modal"
       />
 
-      <div className="relative z-10 w-full max-w-[320px] rounded-2xl border border-bg-surface bg-bg-card p-5 shadow-xl">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h2
-            id="modal-title"
-            className="font-oswald text-lg font-bold text-gold-primary"
-          >
+      <div className="material grain relative z-10 w-full max-w-[320px] overflow-hidden rounded-2xl border border-hair p-5">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <h2 id="modal-title" className="font-display text-lg font-semibold text-txt">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-text-secondary transition-colors hover:bg-bg-surface hover:text-text-primary"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-txt-sub transition-colors hover:bg-surface-2 hover:text-txt"
             aria-label="Close"
           >
             ×
           </button>
         </div>
 
-        <div className="font-roboto text-[13px] leading-relaxed text-text-secondary">
-          {children}
-        </div>
+        <Divider className="mb-4" />
+
+        <div className="font-body text-[13px] leading-relaxed text-txt-sub">{children}</div>
       </div>
     </div>
   )

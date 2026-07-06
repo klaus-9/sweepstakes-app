@@ -2,8 +2,7 @@ import { create } from 'zustand'
 
 export const useGameStore = create((set) => ({
   balance: 0,
-  betAmount: 0.4, // this is the per-line bet
-  lines: 20,
+  betAmount: 5, // credits wagered per spin (no paylines — a simple stake)
   sessionId: null,
   isSpinning: false,
   lastWin: 0,
@@ -11,8 +10,6 @@ export const useGameStore = create((set) => ({
   updateBalance: (amount) => set({ balance: amount }),
 
   setBet: (amount) => set({ betAmount: amount }),
-
-  setLines: (lines) => set({ lines }),
 
   setSpinning: (isSpinning) => set({ isSpinning }),
 

@@ -5,7 +5,7 @@
 
 ## The basics
 
-- **Name:** Ankit
+- **Name:** Sachit (primary). Sometimes goes by Ankit — same person. Prefer "Sachit".
 - **Email:** renukumarikhanal@gmail.com
 - **Machine:** macOS. Projects live under `~/Desktop/Game/`.
 - **Working style:** Builds hands-on. Was using Cursor for coding, now working through Claude (Cowork mode).

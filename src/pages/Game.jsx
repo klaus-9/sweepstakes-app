@@ -13,7 +13,7 @@ export default function Game() {
 
   // Portal to body so the game escapes #root max-width / overflow clipping.
   return createPortal(
-    <div className="game-viewport">
+    <div className="game-viewport route-fade">
       <SlotGame />
     </div>,
     document.body,
